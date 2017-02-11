@@ -134,3 +134,42 @@ b <- as.vector(a)
 a<-c(469,41,233,7,35,35)
 dlm.extract.bb(a)
 dlm.df
+#####
+library(mongolite)
+cndb <- mongo(collection= "CNPesticides_clean", db = "learnDB", 
+              url = "mongodb://yw518:tmp2016@ciipro.rutgers.edu:27017/learnDB?authSource=admin",
+              verbose = TRUE)
+
+eudb <- mongo(collection= "EUPesticides_clean", db = "learnDB", 
+              url = "mongodb://yw518:tmp2016@ciipro.rutgers.edu:27017/learnDB?authSource=admin",
+              verbose = TRUE)
+
+usdb <- mongo(collection= "USPesticides_clean", db = "learnDB", 
+              url = "mongodb://yw518:tmp2016@ciipro.rutgers.edu:27017/learnDB?authSource=admin",
+              verbose = TRUE)
+
+jpdb <- mongo(collection= "JPPesticides_clean", db = "learnDB", 
+              url = "mongodb://yw518:tmp2016@ciipro.rutgers.edu:27017/learnDB?authSource=admin",
+              verbose = TRUE)
+
+
+cndb$count()
+c <- cndb$find()
+
+
+venn.data$China_1257 <- unique(China_Pesticides$stdinchikey) #1
+venn.data$EU_1017 <- unique(EU_Pesticides$stdinchikey)   #2
+venn.data$Japan_881 <- unique(JP_Pesticides$stdinchikey)               #3
+venn.data$USA_1542 <- unique(USA_Pesticides$stdinchike)   
+
+csv_2_mongodbcn('cn.txt', 'CNPesticides_clean')
+csv_2_mongodb('eu.txt', 'EUPesticides_clean')
+csv_2_mongodb('us.txt', 'USPesticides_clean')
+csv_2_mongodb('jp.txt', 'JPPesticides_clean')
+
+cndb$find()$CASRN
+
+cndb
+data(diamonds, package="ggplot2")
+diamonds
+typeof(diamonds)
