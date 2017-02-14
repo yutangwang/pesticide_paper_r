@@ -2,9 +2,7 @@ setwd('F:/ytwang/Dropbox/USLab/pesticides/')
 
 
 library(mongolite)
-library(grid)
-library(futile.logger)
-library(VennDiagram)
+
 
 
 cndb <- mongo(collection= "CNPesticides_clean", db = "learnDB", 
@@ -27,24 +25,36 @@ pe_pro1 <- mongo(collection= "pesticides_profile1", db = "learnDB",
               url = "mongodb://yw518:tmp2016@ciipro.rutgers.edu:27017/learnDB?authSource=admin",
               verbose = TRUE)
 
+ppdb_4 <- mongo(collection= "ppdb_4", db = "learnDB", 
+                url = "mongodb://yw518:tmp2016@ciipro.rutgers.edu:27017/learnDB?authSource=admin",
+                verbose = TRUE)
+
+four_db <- mongo(collection= "Pesticides_4countriesCleanPP_1", db = "learnDB", 
+                 url = "mongodb://yw518:tmp2016@ciipro.rutgers.edu:27017/learnDB?authSource=admin",
+                 verbose = TRUE)
+
 pe_pro1$insert(profile_1)
   
   
 venn.data <- list()
-venn.data$China_1199<- cndb$find()$cactus_smiles            #1
-venn.data$EU_914 <- eudb$find()$cactus_smiles               #2
-venn.data$USA_669 <- usdb$find()$cactus_smiles               #3
-venn.data$Japan_401 <- jpdb$find()$cactus_smiles            #4
+venn.data$CN<- cndb$find()$cactus_smiles            #1
+venn.data$EU <- eudb$find()$cactus_smiles               #2
+venn.data$USA <- usdb$find()$cactus_smiles               #3
+venn.data$JP <- jpdb$find()$cactus_smiles            #4
 
+library(grid)
+library(futile.logger)
+library(VennDiagram)
 
 ##绘图函数
 ##4个集合的文氏图
 grob.list <- venn.diagram(x=venn.data,filename=NULL,
                           cex=1.8,cat.cex=1.8,
-                          cat.dist=0.04,##类别名与边的距离
-                          label.col="white",##区域类数字的颜色
+                          cat.dist=0.03,##类别名与边的距离
+                          label.col="black",##区域类数字的颜色
                           fontface=2,##区域类数字的字体
-                          fill=2:5,
+                          fill=c('red','blue','goldenrod1','green'),
+                          cat.fontface = "bold",
                           category.names = names(venn.data)
 )
 
@@ -53,18 +63,38 @@ grid.draw(grob.list)
 ###提取overlap区域
 ev.getven<-get.venn.partitions(x=
                                  list(
-                                   "China"=venn.data$China_1199,
-                                   "EU"=venn.data$EU_914,
-                                   "USA"=venn.data$USA_669,
-                                   "Japan"=venn.data$Japan_401
+                                   "China"=venn.data$CN,
+                                   "EU"=venn.data$EU,
+                                   "USA"=venn.data$USA,
+                                   "Japan"=venn.data$JP
                                  )
 )
 
 ### 把生成的交集插入mongodb
-newdb <- mongo(collection= "Pesticides_4countriesClean", db = "learnDB", 
+newdb <- mongo(collection= "Pesticides_4countriesClean_1", db = "learnDB", 
               url = "mongodb://yw518:tmp2016@ciipro.rutgers.edu:27017/learnDB?authSource=admin",
               verbose = TRUE)
 newdb$insert(ev.getven)
+
+
+
+##2个集合的文氏图，用于对比ppdb和我自己数据库的区别，经过caseurlatra和cactus修正后，重复率超过71%。
+ppdb_smile_curited <- read.table("F:/ytwang/Dropbox/USLab/pesticides/paper/pesticide_paper_R/ppdb_smile_curited.csv", quote="\"", stringsAsFactors=FALSE)
+venn.data <- list()
+venn.data$ppdb <- ppdb_smile_curited$V1           #1
+venn.data$four <- four_db$find()$smiles           #2
+grob.list <- venn.diagram(x=venn.data,filename=NULL,
+                          cex=1.8,cat.cex=1.8,
+                          cat.dist=0.03,##类别名与边的距离
+                          label.col="black",##区域类数字的颜色
+                          fontface=2,##区域类数字的字体
+                          fill=2:3,
+                          cat.fontface = "bold",
+                          category.names = names(venn.data)
+)
+
+grid.draw(grob.list)
+write.csv(venn.data$ppdb,'ppdb_smile.csv')
 
 
 ## write a function
@@ -162,7 +192,7 @@ venn.data$EU_1017 <- unique(EU_Pesticides$stdinchikey)   #2
 venn.data$Japan_881 <- unique(JP_Pesticides$stdinchikey)               #3
 venn.data$USA_1542 <- unique(USA_Pesticides$stdinchike)   
 
-csv_2_mongodbcn('cn.txt', 'CNPesticides_clean')
+csv_2_mongodb('cn.txt', 'CNPesticides_clean')
 csv_2_mongodb('eu.txt', 'EUPesticides_clean')
 csv_2_mongodb('us.txt', 'USPesticides_clean')
 csv_2_mongodb('jp.txt', 'JPPesticides_clean')
